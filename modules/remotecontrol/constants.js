@@ -12,7 +12,8 @@ module.exports = {
         keyup: "keyup",
         permissions: "permissions",
         stop: "stop",
-        supported: "supported"
+        supported: "supported",
+        start: "start"
     },
 
     /**

@@ -67,8 +67,9 @@ function setAPPListeners () {
  */
 function createJitsiMeetWindow () {
     jitsiMeetWindow = new BrowserWindow(jitsiMeetWindowOptions);
-    jitsiMeetWindow.loadURL(indexURL);
-
+    jitsiMeetWindow.webContents.session.clearCache( () => {
+      jitsiMeetWindow.loadURL(indexURL);
+    });
     jitsiMeetWindow.webContents.on('new-window', function(event, url) {
         event.preventDefault();
         electron.shell.openExternal(url);

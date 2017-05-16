@@ -1,4 +1,6 @@
 let robot = require("robotjs");
+const na = require("NAtest");
+const electron = require("electron");
 const constants = require("../../modules/remotecontrol/constants");
 const {EVENT_TYPES, PERMISSIONS_ACTIONS, REMOTE_CONTROL_EVENT_NAME} = constants;
 
@@ -8,10 +10,10 @@ const {EVENT_TYPES, PERMISSIONS_ACTIONS, REMOTE_CONTROL_EVENT_NAME} = constants;
  */
 window.robot = robot;
 
-/**
- * Width/Heught for the screen.
- */
-const {width, height} = robot.getScreenSize();
+// /**
+//  * Width/Heught for the screen.
+//  */
+// const {width, height} = robot.getScreenSize();
 
 /**
  * Mouse button mapping between the values in remote-control-event and robotjs
@@ -76,9 +78,6 @@ class RemoteControl {
                 }
             });
             this.sendEvent({type: EVENT_TYPES.supported});
-            if (!handleAuthorization) {
-                this.start();
-            }
         });
     }
 
@@ -123,6 +122,10 @@ class RemoteControl {
      */
     start() {
         this.started = true;
+        const area = na.sourceIDToDisplay(this.sourceID);
+        console.debug(electron.screen.getAllDisplays());
+        this.screen = electron.screen.getDisplayNearestPoint({x: area.x+1, y: area.y+1});
+        console.debug(screen);
     }
 
     /**
@@ -137,12 +140,14 @@ class RemoteControl {
      * @param {Object} event the remote-control-event.
      */
     onRemoteControlEvent(event) {
-        if(!this.started && event.type !== EVENT_TYPES.permissions) {
+        if(!this.started && event.type !== EVENT_TYPES.permissions && event.type != EVENT_TYPES.start) {
             return;
         }
         switch(event.type) {
             case EVENT_TYPES.mousemove: {
-                const x = event.x * width, y = event.y * height;
+                const workArea = this.screen.workArea;
+                const x = event.x * workArea.width + workArea.x;
+                const y = event.y * workArea.height + workArea.y;
                 if(mouseButtonStatus === "down") {
                     robot.dragMouse(x, y);
                 } else {
@@ -192,6 +197,11 @@ class RemoteControl {
                     });
                 }
                 break;
+            }
+            case EVENT_TYPES.start: {
+              this.sourceID = event.id;
+              this.start();
+              break;
             }
             case EVENT_TYPES.stop: {
                 this.stop();
